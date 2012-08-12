@@ -10,7 +10,7 @@ default: build
 build: .build/firmware.elf
 
 .build/firmware.elf: src/*.ino
-	$(INO) build -m $(MODEL)
+	$(INO) build -m $(MODEL) -v
 
 upload: build
 	$(INO) upload -m $(MODEL) -p $(SERIAL_PORT)

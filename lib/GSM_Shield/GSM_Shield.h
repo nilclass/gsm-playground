@@ -161,8 +161,6 @@ class GSM
     inline void SetCommLineStatus(byte new_status) {comm_line_status = new_status;};
     // get comm. line status
     inline byte GetCommLineStatus(void) {return comm_line_status;};
-
-
     // turns on GSM module
     void TurnOn(long baud_rate);
     // sends some initialization parameters
@@ -223,6 +221,10 @@ class GSM
 	char DelPhoneNumber(byte position);
     char ComparePhoneNumber(byte position, char *phone_number);
 
+    bool EnterPin(char *pin, uint16_t start_comm_tmout, uint16_t max_interchar_tmout);
+
+    void DumpConfiguration();
+
 
     // routines regarding communication with the GSM module
     void RxInit(uint16_t start_comm_tmout, uint16_t max_interchar_tmout);
@@ -252,6 +254,9 @@ class GSM
     void DebugPrint(int number_to_print, byte last_debug_print);
 #endif
 
+    // SORRY, HAD TO MAKE PUBLIC. --niklas
+    byte *p_comm_buf;               // pointer to the communication buffer
+
   private:
     byte comm_line_status;
 
@@ -260,7 +265,6 @@ class GSM
 
     // variables connected with communication buffer
     
-    byte *p_comm_buf;               // pointer to the communication buffer
     byte comm_buf_len;              // num. of characters in the buffer
     byte rx_state;                  // internal state of rx state machine    
     uint16_t start_reception_tmout; // max tmout for starting reception
@@ -271,5 +275,11 @@ class GSM
     byte last_speaker_volume; 
 
     char InitSMSMemory(void);
+
+ public:
+    void DumpBuffer();
+    char *GetRespAt(char *start);
+    void SendData(char *AT_cmd_string);
+    void EOL();
 };
 #endif

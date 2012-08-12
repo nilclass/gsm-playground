@@ -307,6 +307,24 @@ byte GSM::IsRxFinished(void)
   return (ret_val);
 }
 
+void GSM::DumpBuffer() {
+  Serial.print("DEBUG COMM BUF: ");
+  for (int i=0; i<comm_buf_len; i++){
+    Serial.print(char(comm_buf[i]));	
+  }
+  Serial.print("\n");
+}
+
+char *GSM::GetRespAt(char *start) {
+  char *bufPtr;
+
+  for(bufPtr = (char*)comm_buf;
+      ( bufPtr && (strncmp(bufPtr, start, strlen(start)) != 0) );
+      (byte*)bufPtr <= (comm_buf + comm_buf_len) ? bufPtr++ : (bufPtr = NULL));
+
+  return bufPtr;
+}
+
 /**********************************************************
 Method checks received bytes
 
@@ -321,13 +339,13 @@ byte GSM::IsStringReceived(char const *compare_string)
   byte ret_val = 0;
 
   if(comm_buf_len) {
+    // Serial.print("DEBUG COMM BUF: ");
+    // for (int i=0; i<comm_buf_len; i++){
+    //   Serial.print(char(comm_buf[i]));	
+    // }
   /*
 		#ifdef DEBUG_GSMRX
-			DebugPrint("DEBUG: Compare the string: \r\n", 0);
-			for (int i=0; i<comm_buf_len; i++){
-				Serial.print(byte(comm_buf[i]));	
-			}
-			
+			DebugPrint("DEBUG: Compare the string: \r\n", 0);			
 			DebugPrint("\r\nDEBUG: with the string: \r\n", 0);
 			Serial.print(compare_string);	
 			DebugPrint("\r\n", 0);
@@ -349,6 +367,11 @@ byte GSM::IsStringReceived(char const *compare_string)
 	  */
 	}
   }
+
+  // Serial.print("DEBUG: IsStringReceived(");
+  // Serial.print(compare_string);
+  // Serial.print(") ? ");
+  // Serial.println(ret_val);
 
   return (ret_val);
 }
@@ -424,6 +447,14 @@ byte GSM::WaitResp(uint16_t start_comm_tmout, uint16_t max_interchar_tmout,
   return (ret_val);
 }
 
+void GSM::SendData(char *AT_cmd_string) {
+  mySerial.print(AT_cmd_string);
+}
+
+void GSM::EOL() {
+  mySerial.print(0x1a);
+  mySerial.flush();
+}
 
 /**********************************************************
 Method sends AT command and waits for response
@@ -441,6 +472,9 @@ char GSM::SendATCmdWaitResp(char const *AT_cmd_string,
   byte status;
   char ret_val = AT_RESP_ERR_NO_RESP;
   byte i;
+
+  Serial.print("DEBUG: AT_cmd_string: ");
+  Serial.println(AT_cmd_string);
 
   for (i = 0; i < no_of_attempts; i++) {
     // delay 500 msec. before sending next repeated AT command 
@@ -465,7 +499,6 @@ char GSM::SendATCmdWaitResp(char const *AT_cmd_string,
     }
     
   }
-
 
   return (ret_val);
 }
@@ -658,6 +691,17 @@ void GSM::TurnOn(long baud_rate)
   InitParam(PARAM_SET_0);
 }
 
+void GSM::DumpConfiguration() {
+  mySerial.println("AT&V");
+  while(WaitResp(5000, 50) != RX_FINISHED);
+  char *p = (char*)comm_buf;
+  Serial.println("\n\nBEGIN DUMP CONFIG\n");
+  while(0 != strncmp(p, "OK", 2) && (void*)p < (void*)p_comm_buf) {
+    Serial.print((char)*p++);
+  }
+  Serial.println("\n\nEND DUMP CONFIG\n");
+      
+}
 
 /**********************************************************
   Sends parameters for initialization of GSM module
@@ -2261,7 +2305,7 @@ void GSM::Echo(byte state)
 		DebugPrint("DEBUG Echo\r\n",1);
 	  #endif
 	  mySerial.print("ATE");
-	  mySerial.print((int)state);    
+	  mySerial.print((int)state);
 	  mySerial.print("\r");
 	  delay(500);
 	  SetCommLineStatus(CLS_FREE);
