@@ -46,7 +46,7 @@ namespace Sensors {
   void readAll(float *temps) {
     int i;
     for(i=0;i<sensorsFound;i++) {
-      temps[i] = readTemperature(sensorAddresses[i]);
+      temps[i] = readOne(sensorAddresses[i]);
     }
   }
 

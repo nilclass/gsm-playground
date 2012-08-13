@@ -21,7 +21,7 @@ namespace Sensors {
   byte *getAddress(unsigned int index);
   float readOne(byte sensorAddress[8]);
   void readAll(float *temps);
-  void initiateRead(void);
+  void initiateRead(unsigned int wait);
 
 }
 

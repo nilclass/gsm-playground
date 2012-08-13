@@ -86,7 +86,7 @@ void loop() {
         Serial.print("Sample #");
         Serial.print(i, DEC);
         Serial.print(": ");
-        for(var j=0;j<Sensors::count();j++) {
+        for(int j=0;j<Sensors::count();j++) {
           Serial.print(tempValues[i][j]);
           Serial.print(" ");
         }
