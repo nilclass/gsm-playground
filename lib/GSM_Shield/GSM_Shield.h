@@ -280,6 +280,8 @@ class GSM
     void DumpBuffer();
     char *GetRespAt(char *start);
     void SendData(char *AT_cmd_string);
+    void SendData(char c);
+    void SendLine(const char *AT_cmd_string);
     void EOL();
 };
 #endif

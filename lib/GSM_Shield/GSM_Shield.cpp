@@ -308,7 +308,7 @@ byte GSM::IsRxFinished(void)
 }
 
 void GSM::DumpBuffer() {
-  Serial.print("DEBUG COMM BUF: ");
+  Serial.print("DCB: ");
   for (int i=0; i<comm_buf_len; i++){
     Serial.print(char(comm_buf[i]));	
   }
@@ -447,8 +447,18 @@ byte GSM::WaitResp(uint16_t start_comm_tmout, uint16_t max_interchar_tmout,
   return (ret_val);
 }
 
+void GSM::SendData(char c) {
+  mySerial.print(c);
+}
+
 void GSM::SendData(char *AT_cmd_string) {
   mySerial.print(AT_cmd_string);
+}
+
+void GSM::SendLine(const char *line) {
+  Serial.print("DEBUG: ");
+  Serial.println(line);
+  mySerial.println(line);
 }
 
 void GSM::EOL() {
@@ -473,15 +483,12 @@ char GSM::SendATCmdWaitResp(char const *AT_cmd_string,
   char ret_val = AT_RESP_ERR_NO_RESP;
   byte i;
 
-  Serial.print("DEBUG: AT_cmd_string: ");
-  Serial.println(AT_cmd_string);
-
   for (i = 0; i < no_of_attempts; i++) {
     // delay 500 msec. before sending next repeated AT command 
     // so if we have no_of_attempts=1 tmout will not occurred
     if (i > 0) delay(500); 
 
-    mySerial.println(AT_cmd_string);
+    SendLine(AT_cmd_string);
     status = WaitResp(start_comm_tmout, max_interchar_tmout); 
     if (status == RX_FINISHED) {
       // something was received but what was received?

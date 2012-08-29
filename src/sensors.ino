@@ -5,14 +5,31 @@
 #include "gsm-stuff.h"
 
 
-/* float *tempValues[60]; */
-/* unsigned int tempCounter = 0; */
-
+/**
+ * A module for DS18x20 temperature sensors.
+ **/
 namespace Sensors {
-  byte sensorAddresses[4][8];
+  /**
+   * Field of sensor addresses.
+   **/
+  byte sensorAddresses[MAX_SENSORS][8];
+  /**
+   * Number of sensors found.
+   **/
   unsigned int sensorsFound = 0;
+
+  /**
+   * The OneWire object used to communicate with sensors.
+   **/
   OneWire ow(SENSORS_PIN);
 
+  /**
+   * Initiate a read (DS18x20 datasheet calls it 'CONVERT T'), then wait
+   * for 'wait' milliseconds. Play around with the value, 750 works well
+   * for me.
+   * This will broadcast the CONVERT command, so all sensors will comply.
+   * You need to call this before calling readOne or readAll.
+   **/
   void initiateRead(unsigned int wait) {
     ow.reset(); // reset all devices
     ow.write(0xCC); // SKIP ROM command (~ broadcast)
@@ -20,6 +37,9 @@ namespace Sensors {
     delay(wait); // wait for CONVERT T to finish
   }
 
+  /**
+   * Read temperature value of a single sensor, identified by given address.
+   **/
   float readOne(byte sensorAddress[8]) {
     int i;
     byte data[8];
@@ -43,6 +63,10 @@ namespace Sensors {
     }
   }
 
+  /**
+   * Read temperature values from all sensors and store them at 'temps'.
+   * 'temps' must be a field with at least Sensors::count() elements.
+   **/
   void readAll(float *temps) {
     int i;
     for(i=0;i<sensorsFound;i++) {
@@ -50,14 +74,24 @@ namespace Sensors {
     }
   }
 
+  /**
+   * Get a device address, based on it's index in the list.
+   * index must be smaller than Sensors::count();
+   **/
   byte *getAddress(unsigned int index) {
     return sensorAddresses[index];
   }
 
+  /**
+   * Get the number of discovered devices.
+   **/
   unsigned int count() {
     return sensorsFound;
   }
 
+  /**
+   * Convert device address to human readable hex string
+   **/
   char* addressToString(byte addr[8]) {
     static char s[19];
     snprintf(s, 19, "0x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", addr[0], addr[1], addr[2],
@@ -65,6 +99,9 @@ namespace Sensors {
     return s;
   }
 
+  /**
+   * Scan for DS18x20 devices.
+   **/
   void discover() {
     byte addr[8];
     sensorsFound = 0;

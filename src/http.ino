@@ -8,8 +8,8 @@ void at_command(char *format, ...) {
   gsm.SendData("AT+");
   vsnprintf(at_command, 256, format, ap);
 
-  Serial.print("AT COMMAND: ");
-  Serial.println(at_command);
+  /* Serial.print("AT COMMAND: "); */
+  /* Serial.println(at_command); */
   
   va_end(ap);
   gsm.SendData(at_command);
@@ -53,6 +53,12 @@ namespace HTTP {
     return(AT_RESP_OK == gsm.SendATCmdWaitResp(at_command, 500, 100, "OK", 5));  
   }
 
+  bool AT_HTTPDATA(int size, int time) {
+    char at_command[64];
+    snprintf(at_command, 64, "AT+HTTPDATA=%d,%d", size, time);
+    return(AT_RESP_OK == gsm.SendATCmdWaitResp(at_command, 500, 100, "DOWNLOAD", 1));
+  }
+
   bool StartGPRS(char *apn, char *user, char *pass) {
     SAPBR(2, 1);
     gsm.DumpBuffer();
@@ -79,8 +85,6 @@ namespace HTTP {
   }
 
   void PrepareRequest(char *url) {
-    AT_HTTP("TERM");
-    gsm.DumpBuffer();
     AT_HTTP("INIT");
     gsm.DumpBuffer();
     AT_HTTP("PARA", "CID", "1");
@@ -95,7 +99,12 @@ namespace HTTP {
 
   // initialize HTTP, connect to GPRS and stuff
   bool start(char *apn, char *user, char *pass) {
+    // TODO: initiate multi-request stuff, if needed.
     return StartGPRS(apn, user, pass);
+  }
+
+  bool close() {
+    return SAPBR(0, 1);
   }
 
   int get(char *url) {
@@ -105,18 +114,25 @@ namespace HTTP {
     gsm.DumpBuffer();
   }
 
-  int post(char *url, char *data) {
+  int startPost(char *url) {
     PrepareRequest(url);
+  }
 
-    at_command("HTTPDATA=%d,%d", strlen(data), 1000);
+  void postData(int len, char *data) {
+    AT_HTTPDATA(len, 1000);
+    for(int i=0;i<len;i++) {
+      gsm.SendData(data[i]);
+    }
+    gsm.EOL();
     gsm.WaitResp(500, 50);
     gsm.DumpBuffer();
-    gsm.SendData(data);
-    gsm.SendData("\x1a");
-    delay(200);
-    gsm.DumpBuffer();
+  }
 
+  void finalizePost() {
     AT_HTTP("ACTION", 1);
+    gsm.WaitResp(500, 50);
+    gsm.DumpBuffer();
+    AT_HTTP("TERM");
     gsm.DumpBuffer();
   }
 

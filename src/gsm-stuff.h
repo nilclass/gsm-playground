@@ -5,13 +5,17 @@
 #include <GSM_Shield.h>
 
 #define SENSORS_PIN 7
+#define MAX_SENSORS 20
 
 extern GSM gsm;
 
 namespace HTTP {
   bool start(char *apn, char *user, char *pass);
+  bool close(void);
   int get(char *url);
-  int post(char *url, char *data);
+  int startPost(char *url);
+  void postData(int len, char *data);
+  void finalizePost(void);
 }
 
 namespace Sensors {
@@ -22,6 +26,7 @@ namespace Sensors {
   float readOne(byte sensorAddress[8]);
   void readAll(float *temps);
   void initiateRead(unsigned int wait);
+  char* addressToString(byte addr[8]);
 
 }
 
